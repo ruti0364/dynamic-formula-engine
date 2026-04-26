@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
 // mockData.js — Static demo data for Vercel deployment
 //
-// Reflects real benchmark results:
-//   C#     ~1.2s total  (fastest — Roslyn IL + Parallel.For)
-//   SQL    ~3.4s total  (set-based INSERT...SELECT per formula)
-//   Python ~97s  total  (vectorized but slow SQL insert via fast_executemany)
+// Real benchmark results from t_log (SQL Server):
+//   CSharp : ~1.15s per formula  (total ~24.2s across 21 formulas)
+//   SQL    : ~2.93s per formula  (total ~61.5s across 21 formulas)
+//   Python : ~102.96s per formula (total ~2162s across 21 formulas)
 //
 // DO NOT DELETE — production DB connection code lives in App.js (USE_MOCK=false)
 // ---------------------------------------------------------------------------
@@ -33,35 +33,19 @@ const FORMULAS = [
   { id: 21, expr: 'if(c > d, abs(c-d), abs(d-c))' },
 ];
 
-const METHODS = ['CSharp', 'SQL', 'Python'];
-
-// Target totals (seconds): CSharp=1.2, SQL=3.4, Python=97
-// Sum of all COMPLEXITY values = 24.6
-// BASE_TIME = target_total / sum_of_complexity
-const COMPLEXITY = {
-  1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.1, 6: 1.0,
-  7: 1.1, 8: 1.4, 9: 1.3, 10: 1.1, 11: 1.5, 12: 1.4,
-  13: 1.3, 14: 1.1, 15: 1.2, 16: 1.2, 17: 1.1, 18: 1.2,
-  19: 1.1, 20: 1.2, 21: 1.3,
+// Exact values from t_log
+const RAW_LOG = {
+  CSharp: [1.274607, 1.205127, 1.144975, 1.163428, 1.176565, 1.145335, 1.160210, 1.109617, 1.159778, 1.173173, 1.196667, 1.167618, 1.120010, 1.128342, 1.111715, 1.149291, 1.164274, 1.120871, 1.109492, 1.089101, 1.132302],
+  Python: [102.958995, 102.948070, 102.951004, 102.947981, 102.957990, 102.947992, 102.956004, 102.958360, 102.961985, 102.954995, 102.969605, 102.955000, 102.972994, 102.952027, 102.956619, 102.956537, 102.949987, 102.957012, 102.953075, 102.959991, 102.962992],
+  SQL:    [2.950680, 2.820611, 3.021794, 3.033991, 2.909627, 2.868447, 2.866809, 2.906837, 3.115662, 2.918163, 2.936601, 2.822888, 2.899564, 2.943652, 2.916796, 3.031377, 2.884113, 2.850778, 2.893121, 2.874028, 3.058583],
 };
-// sum(COMPLEXITY) = 24.6
-// CSharp: 1.2  / 24.6 = 0.048780
-// SQL:    3.4  / 24.6 = 0.138211
-// Python: 97.0 / 24.6 = 3.943089
 
-const BASE_TIME = { CSharp: 0.048780, SQL: 0.138211, Python: 3.943089 };
-
-function t(method, formulaId) {
-  const base = BASE_TIME[method] * COMPLEXITY[formulaId];
-  // tiny deterministic jitter (max 0.001s) so numbers look real, not rounded
-  const jitter = ((formulaId * 7 + method.length * 3) % 11) * 0.0001;
-  return parseFloat((base + jitter).toFixed(4));
-}
+const METHODS = ['CSharp', 'SQL', 'Python'];
 
 // ── /api/comparison ──────────────────────────────────────────────────────────
 export const mockComparison = METHODS.flatMap(method =>
-  FORMULAS.map(f => {
-    const avg = t(method, f.id);
+  FORMULAS.map((f, idx) => {
+    const avg = RAW_LOG[method][idx];
     return {
       method,
       targil_id:  f.id,
@@ -78,17 +62,16 @@ export const mockComparison = METHODS.flatMap(method =>
 // ── /api/log ─────────────────────────────────────────────────────────────────
 let logId = 1;
 export const mockLog = METHODS.flatMap(method =>
-  FORMULAS.map(f => ({
+  FORMULAS.map((f, idx) => ({
     log_id:    logId++,
     targil_id: f.id,
     targil:    f.expr,
     method,
-    run_time:  t(method, f.id),
+    run_time:  RAW_LOG[method][idx],
   }))
 );
 
 // ── /api/results ─────────────────────────────────────────────────────────────
-// Two representative data rows (data_id 1 and 2) with realistic values
 const DATA_ROWS = [
   { data_id: 1, val_a: 42.37, val_b: 18.91, val_c: 73.54, val_d: 55.12 },
   { data_id: 2, val_a: 7.83,  val_b: 61.44, val_c: 29.07, val_d: 88.65 },
@@ -96,7 +79,6 @@ const DATA_ROWS = [
 
 function calcResult(expr, a, b, c, d) {
   try {
-    // Safe eval for demo — only runs on our own known formula strings
     const fn = new Function('a','b','c','d', `
       const sqrt=Math.sqrt, log=Math.log, abs=Math.abs,
             sin=Math.sin, cos=Math.cos, exp=Math.exp,
@@ -129,8 +111,8 @@ export const mockResults = DATA_ROWS.flatMap(row =>
 );
 
 // ── /api/verify ──────────────────────────────────────────────────────────────
-export const mockVerify = FORMULAS.map(f => {
-  const times = METHODS.map(m => t(m, f.id));
+export const mockVerify = FORMULAS.map((f, idx) => {
+  const times = METHODS.map(m => RAW_LOG[m][idx]);
   const minT  = Math.min(...times);
   const maxT  = Math.max(...times);
   return {
