@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37216.2 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp_Project", "CSharp_Project\DynamicFormulaEngine.csproj", "{F57847FB-8C73-479F-A0FA-8464DA010A36}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Python_Project", "Python_Project\PythonCalculation.pyproj", "{67908D47-C271-44CF-84B0-289F48945C7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F57847FB-8C73-479F-A0FA-8464DA010A36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F57847FB-8C73-479F-A0FA-8464DA010A36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F57847FB-8C73-479F-A0FA-8464DA010A36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F57847FB-8C73-479F-A0FA-8464DA010A36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67908D47-C271-44CF-84B0-289F48945C7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67908D47-C271-44CF-84B0-289F48945C7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D65AE576-D367-4764-B153-4E781F4F96D6}
+	EndGlobalSection
+EndGlobal
