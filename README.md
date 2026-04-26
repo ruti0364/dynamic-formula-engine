@@ -2,7 +2,7 @@
 
 **מבדק פיתוח רמה ג | משרד החינוך — מנהל טכנולוגיות דיגיטליות ומידע**
 
-> 📄 דוח מסכם מלא: [דוח_מסכם.pdf](./דוח_מסכם.pdf)
+> 📄 דוח מסכם מלא: [דוח_מסכם.pdf](./דוח%20מסכם.pdf)
 >
 > 🔗 **Live Demo:** [dynamic-formula-engine.vercel.app](https://dynamic-formula-engine.vercel.app/)
 
