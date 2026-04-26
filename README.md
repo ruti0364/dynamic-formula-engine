@@ -67,7 +67,8 @@
 │   │   ├── Program.cs                   # FormulaCompiler, BulkDataReader, DataLoader
 │   │   └── DynamicFormulaEngine.csproj
 │   ├── Python_Project/
-│   │   └── PythonCalculation.py
+│   │   ├── PythonCalculation.py
+│   │   └── requirements.txt
 │   └── DynamicFormulaEngine.sln
 │
 ├── sql-scripts/
@@ -118,6 +119,10 @@ t_log      (log_id PK, targil_id FK, method, run_time FLOAT)          -- timing
 
 **`if()` rewriting** — parser ברמת תו (לא regex) שמטפל נכון ב-nested calls כמו `power(a, 2)`.
 
+**NuGet packages** (`DynamicFormulaEngine.csproj`):
+- `Microsoft.CodeAnalysis.CSharp.Scripting` — קומפילציה דינמית של נוסחאות (Roslyn)
+- `Microsoft.Data.SqlClient` — חיבור ל-SQL Server
+
 ---
 
 ### Python — Vectorized + Parquet
@@ -127,14 +132,13 @@ t_log      (log_id PK, targil_id FK, method, run_time FLOAT)          -- timing
 3. **Disk savings** — ~8MB לנוסחה ב-Parquet לעומת ~180MB ב-CSV (חיסכון ~95%).
 4. **Insert** — `fast_executemany=True` ב-SQLAlchemy. connection אחד משותף לכל הנוסחאות.
 
+**Python packages** (`requirements.txt`):
+- `pandas`, `numpy` — חישוב וקטורי
+- `sqlalchemy`, `pyodbc` — חיבור ל-SQL Server
+- `pyarrow` — כתיבה לקבצי Parquet (**חובה** — בלעדיו הקוד ייכשל)
+
 ---
 
-### SQL — Dynamic T-SQL
-
-`sp_CalculateDynamicFormula` בונה ומריץ `INSERT ... SELECT` דינמי לכל נוסחה:
-
-- **Simple formulas** — `targil` מוכנס ישירות כביטוי SQL.
-- **Conditional formulas** — `tnai` + `targil_false` ממופים ל-`CASE WHEN ... THEN ... ELSE ... END`. `!=` ו-`==` מנורמלים ל-T-SQL לפני הרצה.
 ### SQL — Dynamic T-SQL
 
 `sp_CalculateDynamicFormula` בונה ומריץ `INSERT ... SELECT` דינמי לכל נוסחה:
@@ -153,8 +157,6 @@ t_log      (log_id PK, targil_id FK, method, run_time FLOAT)          -- timing
 - .NET 8 SDK
 - Python 3.10+ with `pip`
 - Node.js 18+
-
-> **Python note:** `pyarrow` is required for Parquet support — without it the engine will fail at the write step. Install via `requirements.txt` (see Setup below).
 
 ---
 
@@ -178,28 +180,24 @@ sql-scripts/02_sql_dynamic_method.sql
 
 כל מנוע מנקה את תוצאותיו הקודמות לפני ריצה. ניתן להריץ בכל סדר.
 
-**C#**
+**C# — שחזור חבילות NuGet והרצה:**
 ```bash
 cd calculation-engines/CSharp_Project
 dotnet restore
 dotnet run
 ```
 
-**Python**
+**Python — התקנת חבילות והרצה:**
 ```bash
 cd calculation-engines/Python_Project
 pip install -r requirements.txt
 python PythonCalculation.py
 ```
 
-`requirements.txt` includes: `pandas`, `numpy`, `sqlalchemy`, `pyodbc`, `pyarrow`.
-
-**SQL**
+**SQL — הרצת Stored Procedure:**
 ```sql
 -- כלול בסוף 02_sql_dynamic_method.sql — רץ אוטומטית
--- להרצה חוזרת:
-EXEC sp_CalculateDynamicFormula @TargilId = 1;  -- לנוסחה בודדת
--- או הרץ מחדש את כל ה-cursor block ב-02_sql_dynamic_method.sql
+-- להרצה חוזרת — הרץ את ה-cursor block ב-02_sql_dynamic_method.sql
 ```
 
 ---
@@ -224,10 +222,14 @@ sql-scripts/03_compare_methods.sql
 
 ```bash
 # Terminal 1
-cd web-dashboard/backend && npm install && npm start   # port 3001
+cd web-dashboard/backend
+npm install
+npm start        # port 3001
 
 # Terminal 2
-cd web-dashboard/frontend && npm install && npm start  # port 3000
+cd web-dashboard/frontend
+npm install
+npm start        # port 3000
 ```
 
 **API endpoints:**
